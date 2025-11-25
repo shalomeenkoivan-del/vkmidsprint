@@ -1,0 +1,44 @@
+- name: Deploy web application with auto-restart monitoring
+  hosts: all
+  become: yes
+
+  vars:
+    project_dir: /opt/webapp_project
+
+  tasks:
+    - name: Create project directory
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy web application (webapp.py)
+      copy:
+        src: webapp.py
+        dest: "{{ project_dir }}/webapp.py"
+        mode: '0755'
+
+    - name: Copy monitoring script (monitoring.sh)
+      copy:
+        src: monitoring.sh
+        dest: "{{ project_dir }}/monitoring.sh"
+        mode: '0755'
+
+    - name: Copy configuration file (config.sh)
+      copy:
+        src: config.sh
+        dest: "{{ project_dir }}/config.sh"
+        mode: '0644'
+
+    - name: Install systemd service unit
+      copy:
+        src: monitoring.service
+        dest: /etc/systemd/system/monitoring.service
+        mode: '0644'
+
+    - name: Reload systemd and start monitoring service
+      systemd:
+        name: monitoring.service
+        daemon_reload: yes
+        enabled: yes
+        state: started

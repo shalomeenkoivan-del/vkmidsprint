@@ -1,0 +1,25 @@
+[Unit]
+# Short description of the service:
+Description=Web application monitoring with automatic restart on failure
+# Start only after the network is available:
+After=network.target
+
+[Service]
+# Service type:
+Type=simple
+# Working directory where webapp.py and monitoring.sh are located:
+WorkingDirectory=/media/sf_DO6_CICD.ID_356283-1/src/VK/
+# Command to start:
+ExecStart=/usr/bin/env bash /media/sf_DO6_CICD.ID_356283-1/src/VK/monitoring.sh
+# Restart settings:
+Restart=always
+RestartSec=5
+# Send stdout and stderr to the systemd journal (journalctl):
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+# Enable the service at boot in multi-user mode:
+WantedBy=multi-user.target
+
+
