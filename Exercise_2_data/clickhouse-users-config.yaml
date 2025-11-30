@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: clickhouse-users-config
+type: Opaque
+stringData:
+  users.xml: |
+    <yandex>
+        <users>
+        </users>
+    </yandex>

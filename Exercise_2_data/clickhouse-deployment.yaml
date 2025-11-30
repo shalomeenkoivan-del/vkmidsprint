@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickhouse
+  namespace: default 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhouse
+  template:
+    metadata:
+      labels:
+        app: clickhouse
+    spec:
+      containers:
+      - name: clickhouse
+        image: clickhouse/clickhouse-server:
+        ports:
+        - containerPort: 9000
+        - containerPort: 8123
+        volumeMounts: # монтирует users.xml внутрь контейнера
+        - name: users-config
+          mountPath: /etc/clickhouse-server/users.d/users.xml
+          subPath: users.xml # монтирует только один файл, не затрагивая остальные и не перезаписая всю директорию
+          readOnly: true
+      volumes: # объявляет том, основанный на Secret с именем clickhouse-users-config
+      - name: users-config
+        secret:
+          secretName: clickhouse-users-config
