@@ -17,38 +17,38 @@ https://habr.com/ru/companies/beeline_cloud/articles/864222/
 - Для подготовки локального Kubernetes-кластера к работе буду использовать minikube с Docker в качестве драйвера:
 minikube start --driver=docker --memory=3072 (на всякий случай, чтобы точно хватило памяти)
 
-![text](screens/1.png)
+![text](images/1.png)
 
 - Проверяю, что кластер работает:
 kubectl get nodes
 
-![text](screens/2.png)
+![text](images/2.png)
 
 - Далее создаю Deployment-манифест для ClickHouse:
 touch clickhouse-deployment.yaml
 
-![text](screens/4.png)
+![text](images/4.png)
 
 - Применяю манифест:
 kubectl apply -f clickhouse-deployment.yaml
 
-![text](screens/5.png)
+![text](images/5.png)
 
 - Проверяю, что pod создался и работает:
 kubectl get pods
 
-![text](screens/6.png)
+![text](images/6.png)
 
 - Теперь необходимо выполнить ключевую проверку, что сервис действительно работает, а не просто контейнер запущен, для этого нужно попробовать "достучаться" до ClickHouse. По умолчанию Kubernetes запускает контейнер в отдельной внутренней сети, и порты не доступны снаружи. Поэтому нужно сделать "проброс" портов между хостом и самим pod внутри Kubernetes:
 kubectl port-forward clickhouse-85bf6cf78d-w74qm 8123:8123 (первый порт - это порта хоста, второй - порт внутри контейнера в pod, где работает ClickHouse, а точнее его HTTP-интерфейс, примерно так же как в Docker: слева, где мы, справа - контейнер)
 
-![text](screens/7.png)
+![text](images/7.png)
 
 - Теперь по можно обратиться через curl к этому HTTP-порту ClickHouse:
 curl localhost:8123 (отправил HTTP-запрос без параметров и получил ответ от ClickHouse)
 curl localhost:8123:8123/?query=SELECT+1 (Clickhouse выполнил SQL-запрос и вернул 1)
 
-![text](screens/8.png)
+![text](images/8.png)
 
 - Теперь точно все работает, а значит мы реализовали автоматизированное создание стандартной инсталляции ClickHouse в одном экземпляре, а значит, первый пункт задания выполнен и можно приступать к следующему!
 
@@ -61,33 +61,33 @@ cp clickhouse-deployment.yaml clickhouse-deployment.yaml.tmpl
 
 - Редактируем шаблон:
 
-![text](screens/9.png)
+![text](images/9.png)
 
 - Теперь напишем простой bash-скрипт, который будет запускаться с 1 агргументом: заданной пользоватальски версией образа ClickHouse:
 touch start.sh
 chmod +x start.sh
 
-![text](screens/10.png)
+![text](images/10.png)
 
 - Дальше нужно посмотреть все доступные версии ClickHouse для Docker, чтобы подобрать для теста:
 https://hub.docker.com/r/clickhouse/clickhouse-server/tags
 
-![text](screens/11.png)
+![text](images/11.png)
 
 - Выберем, например, версию 25.10 (одну из последних) и запустим скрипт:
 bash start.sh 25.10
 
-![text](screens/12.png)
+![text](images/12.png)
 
 - Проверим pod:
 kubectl get pods
 
-![text](screens/13.png)
+![text](images/13.png)
 
 - Проверим, что образ скачивается:
 kubectl describe pod clickhouse-59f64bf5c9-sf87h
 
-![text](screens/14.png)
+![text](images/14.png)
 
 # Ждем:)
 
@@ -96,15 +96,15 @@ kubectl delete deployment clickhouse
 bash start.sh 25.10
 kubectl get pods
 
-![text](screens/15.png)
+![text](images/15.png)
 
 - Делаю контрольную првоерку работу сервиса:
 kubectl port-forward clickhouse-7fbc5844d5-7xkbj 8123:8123 
 curl localhost:8123
 
-![text](screens/16.png)
+![text](images/16.png)
 
-![text](screens/17.png)
+![text](images/17.png)
 
 - Все работает, поэтому смело переходим к выполнению следующего пункта задания (№3)!
 
@@ -115,56 +115,56 @@ curl localhost:8123
 - Для начала создам Service-манифест для доступа к ClickHouse, удобного проброса портов и внутренней маршрутизации (чтобы легко подключаться к сервису через единый адрес svc/clickhouse, а не искать новое имя пода каждый раз):
 touch clickhouse-svc.yaml
 
-![text](screens/18.png)
+![text](images/18.png)
 
 - Применяем толкьо что созданный манфифест вручную:
 kubectl apply -f clickhouse-svc.yaml
 
-![text](screens/26.png)
+![text](images/26.png)
 
 - Проверяю успешное создание Service:
 kubectl get svc
 
-![text](screens/27.png)
+![text](images/27.png)
 
 - Дальше нужно проверить работу HTTP-интерфейса, для это пробрасываю порты:
 kubectl port-forward svc/clickhouse 8123:8123
-![text](screens/28.png)
+![text](images/28.png)
 
 - Выполняю тестовый запрос:
 curl localhost:8123
 
-![text](screens/29.png)
+![text](images/29.png)
 
 - Вывод "Ok" подтверждает, что интерфейс ClickHouse доступен по HTTP.
 
 - Теперь можно модифицировать наш шаблон, чтобы было понятно, куда монтировать конфиг, а затем - убедиться, что шаблон готов принимать Secret, так как чтобы применять пользователей и пароли, ClickHouse должен сначала "увидеть" этот файл при запуске, потому что Kubernetes Secret сам по себе - только хранилище, и чтобы ClickHouse использовал данные из Secret, их нужно смонтировать в файловую систему контейнера в нужное место:
 nano clickhouse-deployment.yaml.tmpl
 
-![text](screens/tmpl.png)
+![text](images/tmpl.png)
 
 - Теперь переходим к выполнению основного требования этого пункта задания: основную логику развертывания попробую сохранить через тот же скрипт start.sh, добавив в него опцию создания логинов и паролей пользователей. И так как первоначально он был предназначен только для параметризации версии ClickHouse, теперь "слегка" нужно его модернизировать, чтобы из простого скрипта, который принимает одну версию и запускает Deployment, наш скрипт стал полноценной автоматизированной системой с безопасным управлением пользователями и графическим интерфейсом с подсказками! (из косметики, в том числе, сделаю основное меню бесклавишным и интерактивным):
 nano -l start.sh
 
 Строки 1-33:
 
-![text](screens/newstart33.png)
+![text](images/newstart33.png)
 
 Строки 34-66:
 
-![text](screens/newstart66.png)
+![text](images/newstart66.png)
 
 Строки 67-99:
 
-![text](screens/newstart99.png)
+![text](images/newstart99.png)
 
 Строки 100-132:
 
-![text](screens/newstart132.png)
+![text](images/newstart132.png)
 
 Строки 126-158:
 
-![text](screens/newstart158.png)
+![text](images/newstart158.png)
 
 - Таким образом я переписал весь скрипт, чтобы он мог:
 а) интерактивно собирать пользователей и пароли режиме 1 с помощью интерактивного меню, принимая данные по одному
@@ -177,14 +177,14 @@ nano -l start.sh
 - Для это зпустим скрипт:
 bash start.sh
 
-![text](screens/19.png)
+![text](images/19.png)
 
 - Выбираем режим №1 и добавим пользователя admin с паролем adminpass:
 1
 admin adminpass
 <Enter>
 
-![text](screens/20.png)
+![text](images/20.png)
 
 - Возвращаемся в главное меню и выбираем режим №2 и запускаем с версией 25.10:
 0
@@ -193,18 +193,18 @@ admin adminpass
 25.10
 <Enter>
 
-![text](screens/21.png)
+![text](images/21.png)
 
 - Выходим из "программы":
 <Enter>
 3
 
-![text](screens/22.png)
+![text](images/22.png)
 
 - Теперь проверим конфигурации пользователей в Secret, а именно что пользователь действительно сохраненился:
 bash 1.sh (я скопировал команду из интернета "kubectl get secret clickhouse-users-config -o jsonpath='{.data.users\.xml}' | base64 -d" и поместил ее внутрь временного скрипта и запустил, чтобы не набирать вручную)
 
-![text](screens/30.png)
+![text](images/30.png)
 
 - Как результат данная команда показывает корректный XML-файл с корневой тегом <yandex> (стандартный namespace, используемый в конфигурационных файлах ClickHouse), локом <users>, содержащим пользователя <admin> и его пароль <password>adminpass</password>. 
 
@@ -221,7 +221,7 @@ kubectl port-forward svc/clickhouse 9000:9000 &
 - А дальше выполняю тестовый запрос с указанием наших логина (admin) и пароля (adminpass):
 clickhouse-client --host 127.0.0.1 --port 9000 --user admin --password adminpass --query "SELECT 1"
 
-![text](screens/31.png)
+![text](images/31.png)
 
 - Успешный возврат результата "1" подтверждает, что:
 а) пользователь admin существует в ClickHouse
@@ -239,3 +239,4 @@ touch README.md
 Ссылка на публичный репозиторий со всеми файлами задания (task.md, /images со скриншотами, clickhouse-deployment.yaml, start.sh, clickhouse-deployment.yaml.tmpl, clickhouse-svc.yaml, README.md, а так же clickhouse-users-config.yaml, который создается автоматически в процессе работы start.sh):
 
 https://github.com/shalomeenkoivan-del/vkmidsprint/tree/main/Exercise_2_data
+
