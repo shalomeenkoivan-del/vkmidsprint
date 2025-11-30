@@ -166,7 +166,6 @@ nano -l start.sh
 
 ![text](screens/newstart158.png)
 
-=======================================
 - Таким образом я переписал весь скрипт, чтобы он мог:
 а) интерактивно собирать пользователей и пароли режиме 1 с помощью интерактивного меню, принимая данные по одному
 б) хранить их в Secret (потому что пароли нельзя хранить в ConfigMap или в коде)
@@ -238,4 +237,5 @@ clickhouse-client --host 127.0.0.1 --port 9000 --user admin --password adminpass
 touch README.md
 
 Ссылка на публичный репозиторий со всеми файлами задания (task.md, /images со скриншотами, clickhouse-deployment.yaml, start.sh, clickhouse-deployment.yaml.tmpl, clickhouse-svc.yaml, README.md, а так же clickhouse-users-config.yaml, который создается автоматически в процессе работы start.sh):
+
 https://github.com/shalomeenkoivan-del/vkmidsprint/tree/main/Exercise_2_data
